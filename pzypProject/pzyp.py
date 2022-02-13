@@ -71,13 +71,6 @@ def compressor(text_input, window=4096):
 
             textChar_verify = []
 
-        if char == "<":
-            textChar_verify.append(char)
-            textChar_verify.append(char)
-
-        if char != "<":
-            textChar_verify.append(char)
-
         textChar_verify.append(char)
 
         if len(buffer) > window:
