@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>decode.png</file>
+    <file>fundo.png</file>
+    <file>encode.png</file>
+    <file>exit.png</file>
+  </qresource>
+</RCC>
