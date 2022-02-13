@@ -109,12 +109,16 @@ def decompressor(text_input):
         elif char == ">" and coordenates:
             coordenates = False
 
-            length_int = int("".join([str(int) for int in length]))
-            distance_int = int("".join([str(int) for int in distance]))
+            try:
+                length_int = int("".join([str(int) for int in length]))
+                distance_int = int("".join([str(int) for int in distance]))
 
-            actualText = output[-distance_int:][:length_int]
+                actualText = output[-distance_int:][:length_int]
 
-            output.extend(actualText)
+                output.extend(actualText)
+
+            except Exception:
+                print("PzypError: Invalid coordenates")
 
             length = []
             distance = []
