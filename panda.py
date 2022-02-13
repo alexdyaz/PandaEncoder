@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QFileDialog
 from main import *
 import sys
 import base64
+import binascii
 
 
 class Panda(Ui_MainWindow):
@@ -31,6 +32,8 @@ class Panda(Ui_MainWindow):
                 encoded = encoded.write(encode)
                 print(encode)
                 encoded.close()
+                # Binary = binascii.a2b_uu(encode)
+                # print(Binary)
 
     def decode(self):
         file, check = QFileDialog.getOpenFileName(directory='encodedfile.enc')
@@ -42,6 +45,9 @@ class Panda(Ui_MainWindow):
             base64_bytes = text.encode('ascii')
             message_bytes = base64.b64decode(base64_bytes)
             decode = message_bytes.decode('ascii')
+
+            # Ascii = binascii.b2a_uu(binary)
+            # print(Ascii)
 
             decoded, check = QFileDialog.getSaveFileName(directory='decodedfile.txt')
             if check:
