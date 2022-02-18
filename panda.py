@@ -1,8 +1,12 @@
-from PyQt5.QtWidgets import QFileDialog
-from main import *
-import sys
 import base64
-import binascii
+import sys
+import bitstruct
+import bitarray
+from PyQt5.QtCore import Qt
+
+from PyQt5.QtWidgets import QFileDialog, QSlider
+
+from main import *
 
 
 class Panda(Ui_MainWindow):
@@ -12,7 +16,19 @@ class Panda(Ui_MainWindow):
         self.decodebutton.clicked.connect(self.decode)
         self.exitbutton.clicked.connect(self.sair)
 
-    def encode(self):
+        max_sliding_window_size = QSlider(Qt.Horizontal)
+        max_sliding_window_size.setFocusPolicy(Qt.StrongFocus)
+        max_sliding_window_size.setTickPosition(QSlider.TicksBothSides)
+        max_sliding_window_size.setTickInterval(10)
+        max_sliding_window_size.setSingleStep(1)
+        max_sliding_window_size.setValue(1)
+        print(max_sliding_window_size.valueChanged)
+
+    def sair(self):
+
+        quit()
+
+    def encode(self, sair):
         file, check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()",
                                                   "", "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
         if check:
@@ -26,43 +42,55 @@ class Panda(Ui_MainWindow):
 
             print(encode)
 
-            encoded, check = QFileDialog.getSaveFileName(directory='encodedfile.enc')
+            byte_array = encode.encode()
+
+            binary_int = int.from_bytes(byte_array, sys.byteorder)
+
+            binary_string = bin(binary_int)
+            byt = binary_string.encode('utf-8')
+            print(byt)
+
+            encoded, check = QFileDialog.getSaveFileName(directory='encoded.ascii')
             if check:
                 encoded = open(encoded, 'w')
-                encoded = encoded.write(encode)
-                print(encode)
-                encoded.close()
-                # Binary = binascii.a2b_uu(encode)
-                # print(Binary)
+                encoded.write(encode)
+
+                binary, check = QFileDialog.getSaveFileName(directory='encoded.bin')
+                if check:
+                    binary = open(binary, 'wb')
+
+                    binary.write(byt)
 
     def decode(self):
-        file, check = QFileDialog.getOpenFileName(directory='encodedfile.enc')
+        file, check = QFileDialog.getOpenFileName(directory='encoded.ascii')
         if check:
             ficheiro = open(file, 'r')
             text = ficheiro.read()
-            print(text)
 
-            base64_bytes = text.encode('ascii')
+        decoded, check = QFileDialog.getSaveFileName(directory='decodedascii.txt')
+        if check:
+            decoded = open(decoded, 'w')
+            base64_message = text.tostring()
+            base64_bytes = base64_message.encode('ascii')
             message_bytes = base64.b64decode(base64_bytes)
-            decode = message_bytes.decode('ascii')
+            message = message_bytes.decode('ascii')
+            decoded.write(message)
 
-            # Ascii = binascii.b2a_uu(binary)
-            # print(Ascii)
+        openbin, check = QFileDialog.getOpenFileName(directory='encoded.bin')
+        if check:
+            openbin = open(openbin, 'rb')
+            bites = openbin.read()
 
-            decoded, check = QFileDialog.getSaveFileName(directory='decodedfile.txt')
-            if check:
-                print(decode)
-                decoded = open(decoded, 'w')
-                decoded = decoded.write(decode)
-                decoded.close()
-
-    def sair(self):
-
-        quit()
+        binary, check = QFileDialog.getSaveFileName(directory='decodedbin.txt')
+        if check:
+            binary = open(binary, 'w')
+            decodedbin = bites.decode('ascii')
+            binary.write(decodedbin)
 
 
-app = QtWidgets.QApplication(sys.argv)
-MainWindow = QtWidgets.QMainWindow()
-ui = Panda(MainWindow)
-MainWindow.show()
-app.exec_()
+if __name__ == '__main__':
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Panda(MainWindow)
+    MainWindow.show()
+    app.exec_()
