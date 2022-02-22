@@ -1,7 +1,7 @@
 from encodings import utf_8
 import io
 import math
-import sys
+from tkinter import E
 from typing import Union, BinaryIO, Tuple
 # podem também querer: from typing import Iterable
 
@@ -12,13 +12,14 @@ from collections import deque #double-ended queue
 
 usage ='''
 Usage:
-    lzss_io.py -c <file_name>
-    lzss_io.py -d <file_name>
+    pzyp.py -c <file_name>
+    pzyp.py -d <file_name>
 
 '''
 from docopt import docopt
 
 UNENCODED_STRING_SIZE = 8   # in bits
+#ENCODED_OFFSET_SIZE = 24
 ENCODED_OFFSET_SIZE = 12    # in bits
 ENCODED_LEN_SIZE = 4        # in bits
 ENCODED_STRING_SIZE = ENCODED_OFFSET_SIZE + ENCODED_LEN_SIZE  # in bits
@@ -275,12 +276,13 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
         textChar_verify = []
         output = []
         flagEnd = 0
+        flag_done = 0
         i = 0
-
+        flag_go = 0
         text = in_.read()
         for char in text:
             index = textChar_elements(textChar_verify, buffer)
-            if textChar_elements(textChar_verify + [char], buffer) == -1 or i == len(text) - 1:
+            if textChar_elements(textChar_verify + [char], buffer) == -1 or i == len(text) - 1 or flag_go == 1:
                 
                 if i == len(text) - 1 and textChar_elements(textChar_verify + [char], buffer) != -1:
                     flagEnd = 1
@@ -297,17 +299,23 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
                     if length < 3:
                         for byte_int in textChar_verify:
                             lzss_out.write(bytes((byte_int,)))
+                        if i == len(text) - 1:
+                            lzss_out.write(bytes((char,)))
                     else:
+                        #print(textChar_verify)
                         prefix_pos = distance
                         prefix_len = length
-                        print("pos ", prefix_pos, "len", prefix_len)
+                        #print("pos",prefix_pos, "len",prefix_len)
                         lzss_out.write((prefix_pos, prefix_len))
+                        flag_go = 0
 
                     buffer.extend(textChar_verify)
 
                 else:
                     for byte_int in textChar_verify:
                         lzss_out.write(bytes((byte_int,)))
+                    if i == len(text) - 1:
+                        lzss_out.write(bytes((char,)))
                     buffer.extend(textChar_verify)
 
                 textChar_verify = []
@@ -317,30 +325,35 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
                 textChar_verify.append(char)
 
             if char != "<":
-                textChar_verify.append(char)
+                if len(textChar_verify) < ENCODED_OFFSET_SIZE:
+                    textChar_verify.append(char)
+                
+                else:
+                    flag_go = 1
+                    textChar_verify.append(char) 
 
 
             if len(buffer) > window:
                 buffer.popleft()
-
+            
             i += 1
-        
-        for byte_int in output:
-            lzss_out.write(bytes((byte_int,)))
 
         return 0
 
-def decode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
+def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
+    with (lzss_reader or LZSSReader(in_, ctx)) as lzss_in:
         output = []
         var_bytes = b''
         
-        for encoded_flag, elemento in in_:
-            print("Elemento = ", elemento)
+        for encoded_flag, elemento in lzss_in:
+            #print("Elemento = ", elemento)
             if encoded_flag:
                 prefix_pos, prefix_len = elemento
                 actualText = output[-prefix_pos:][:prefix_len]
-                actualText = b''.join(actualText)
-                var_bytes += actualText
+                actualText_1 = b''.join(actualText)
+                var_bytes += actualText_1
+                for part in actualText:
+                    output.append(part)
             else:
                 var_bytes += elemento
                 output.append(elemento)
@@ -357,28 +370,26 @@ def _main():
     args = docopt(usage)
     var_bytes = b''
     if args['-d']:
-        print("decompress")
-        print('Vamos descodificar os dados anteriores')
+        #print("decompress")
         with open(args['<file_name>'], 'rb') as in_:
-            with open('decompressed.bin', 'wb') as out_1:
-                with LZSSReader(in_, ctx=ctx) as reader:
-                    var_bytes += decode(reader,out_1)
+            with open('decompressed.png', 'wb') as out_1:
+                var_bytes += decode(in_,out_1)
                 out_1.write(var_bytes)
-
-            with open('decompressed.bin', 'rb') as out_2:
+            print('Decompress #: O ficheiro de saída tem os seguintes dados: ')
+            with open('decompressed.png', 'rb') as out_2:
                 dados_comp = out_2.read()
-        print(dados_comp)
+            print(dados_comp)
 
 
     elif args['-c']:
-        print("compress")
+        #print("compress")
         with open(args['<file_name>'], 'rb') as _in:
             with open('compressed.lzs', 'wb') as out:
                 encode(_in, out)
-                print('\n----\n')
-                
-                print('O ficheiro de saída tem os seguintes dados: ')
-                
+                #out.seek(0)
+                #var_test = out.read()
+            #print(var_test)
+            print('Compress #: O ficheiro de saída tem os seguintes dados: ')
             with open('compressed.lzs', 'rb') as out:
                 out.seek(0)
                 dados_comp = out.read()
