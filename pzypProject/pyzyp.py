@@ -32,12 +32,14 @@ print('Estado: ' + __status__)
 print('Descricao: ' + __descricao__)
 
 usage = '''
-Usage:
-    pzyp.py -c <file_name>
-    pzyp.py -d <file_name>
 
+usage:
+	pzyp.py -d  <file_name>
+	pzyp.py -c -s <file_name>      
+	pzyp.py -c -m <file_name> 
+	pzyp.py -c -l <file_name>    
+	pzyp.py -c -xl <file_name> 
 '''
-
 
 UNENCODED_STRING_SIZE = 8  # in bits
 # ENCODED_OFFSET_SIZE = 24
@@ -334,7 +336,16 @@ def textChar_elements(textChar_verify2, buffer2):
 
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
-		window = 4096
+		args = docopt(usage)
+		if args['-s']:
+			window = 8192
+		elif args['-m']:
+			window = 16384
+		elif args['-l']:
+			window = 32768
+		elif args['-xl']:
+			window = 65536
+
 		buffer = deque(maxlen=window)
 		textChar_verify = []
 		output = []
@@ -435,14 +446,13 @@ def _main():
 	if args['-d']:
 		# print("decompress")
 		with open(args['<file_name>'], 'rb') as in_:
-			with open('decompressed.png', 'wb') as out_1:
+			with open('decompressed.txt', 'wb') as out_1:
 				var_bytes += decode(in_, out_1)
 				out_1.write(var_bytes)
 			print('Decompress #: O ficheiro de saída tem os seguintes dados: ')
 			with open('decompressed.txt', 'rb') as out_2:
 				dados_comp = out_2.read()
 			print(dados_comp)
-
 
 	elif args['-c']:
 		# print("compress")
