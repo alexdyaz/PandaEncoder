@@ -3,6 +3,7 @@ import sys
 import bitstruct
 import bitarray
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
 from PyQt5.QtWidgets import QFileDialog, QSlider
 
@@ -10,25 +11,32 @@ from main import *
 
 
 class Panda(Ui_MainWindow):
-    def __init__(self, window):
+    def __init__(self, window, vSl=1):
         self.setupUi(window)
         self.encodebutton.clicked.connect(self.encode)
         self.decodebutton.clicked.connect(self.decode)
         self.exitbutton.clicked.connect(self.sair)
+        self.max_sliding_window_size = QSlider(Qt.Horizontal)
+        self.max_sliding_window_size.setValue(vSl)
+        self.max_sliding_window_size.setMinimum(1)
+        self.max_sliding_window_size.setMaximum(4096)
+        self.max_sliding_window_size.setTickPosition(QSlider.TicksBelow)
+        self.max_sliding_window_size.setTickInterval(10)
+        self.max_sliding_window_size.valueChanged[int].connect(self.valuechange)
+        vSl = self.max_sliding_window_size.value()
+        print("__init__vSl -> ", vSl)
 
-        max_sliding_window_size = QSlider(Qt.Horizontal)
-        max_sliding_window_size.setFocusPolicy(Qt.StrongFocus)
-        max_sliding_window_size.setTickPosition(QSlider.TicksBothSides)
-        max_sliding_window_size.setTickInterval(10)
-        max_sliding_window_size.setSingleStep(1)
-        max_sliding_window_size.setValue(1)
-        print(max_sliding_window_size.valueChanged)
+    def valuechange(self, value):
+        self.max_sliding_window_size = self.max_sliding_window_size.value()
+        self.max_sliding_window_size.__init__(value)
+        return self.max_sliding_window_size
 
     def sair(self):
 
         quit()
 
-    def encode(self, sair):
+    def encode(self):
+
         file, check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()",
                                                   "", "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
         if check:
