@@ -20,6 +20,7 @@ import subprocess
 import io
 import math
 import bitstruct
+import pathlib
 from typing import Union, BinaryIO, Tuple, Iterable
 from bitarray import bitarray
 from collections import deque
@@ -275,13 +276,17 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
 		args = docopt(usage)
 		if args['-s']:
-			window = 8192
+			window = 1024
+			ENCODED_OFFSET_SIZE = 10  # in bits
 		elif args['-m']:
-			window = 16384
+			window = 4096
+			ENCODED_OFFSET_SIZE = 12  # in bits
 		elif args['-l']:
-			window = 32768
+			window = 16384
+			ENCODED_OFFSET_SIZE = 14  # in bits
 		elif args['-xl']:
-			window = 65536
+			window = 32768
+			ENCODED_OFFSET_SIZE = 15  # in bits
 
 		buffer = deque(maxlen=window)
 		textChar_verify = []
@@ -381,35 +386,33 @@ def _main():
 	args = docopt(usage)
 	var_bytes = b''
 	if args['-d']:
-
+		ficheiro = input('Insira nome do ficheiro:')
 		with open(args['<file_name>'], 'rb') as in_:
-			with open('decompressed.txt', 'wb') as out_1:
+			with open(ficheiro, 'wb') as out_1:
 				var_bytes += decode(in_, out_1)
 				out_1.write(var_bytes)
-			print('Decompress #: O ficheiro de saída tem os seguintes dados: ')
-			with open('decompressed.txt', 'rb') as out_2:
+			print('O ficheiro de saída tem os seguintes dados: ')
+			with open(ficheiro, 'rb') as out_2:
 				dados_comp = out_2.read()
 				print(dados_comp)
 				try:
-					subprocess.call([os.system('decompressed.txt')])
+					subprocess.call([os.system(ficheiro)])
 				finally:
 					return
 
 	elif args['-c']:
-		# print("compress")
+		ficheiro = input('Insira nome do ficheiro:')
 		with open(args['<file_name>'], 'rb') as _in:
-			with open('compressed.lzs', 'wb') as out:
+			with open(ficheiro + '.lzs', 'wb') as out:
 				encode(_in, out)
 			# out.seek(0)
 			# var_test = out.read()
 			# print(var_test)
-			print('Compress #: O ficheiro de saída tem os seguintes dados: ')
-			with open('compressed.lzs', 'rb') as out:
+			print('O ficheiro de entrada tem os seguintes dados: ')
+			with open(ficheiro + '.lzs', 'rb') as out:
 				out.seek(0)
 				dados_comp = out.read()
 			print(dados_comp)
-	# print(dados_comp.decode())
-
 	else:
 		print("command not found")
 
