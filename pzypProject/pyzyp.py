@@ -413,6 +413,7 @@ def _main():
 				out.seek(0)
 				dados_comp = out.read()
 			print(dados_comp)
+			print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
 	else:
 		print("command not found")
 
