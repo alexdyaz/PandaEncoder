@@ -38,9 +38,9 @@ usage = '''
 
 usage:
 	pzyp.py -d  <file_name>
-	pzyp.py -c -s <file_name>      
+	pzyp.py -c -z <file_name>      
 	pzyp.py -c -m <file_name> 
-	pzyp.py -c -l <file_name>    
+	pzyp.py -c -l <file_name>   
 	pzyp.py -c -xl <file_name> 
 '''
 
@@ -275,7 +275,7 @@ def textChar_elements(textChar_verify2, buffer2):
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
 		args = docopt(usage)
-		if args['-s']:
+		if args['-z']:
 			window = 1024
 			ENCODED_OFFSET_SIZE = 10  # in bits
 		elif args['-m']:
