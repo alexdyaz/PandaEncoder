@@ -14,17 +14,34 @@ __descricao__ = 'LZSS Encoder/ Decoder'
 #
 # =============================================================================
 
+usage = '''
+
+usage:
+	pzyp.py -d <file_name> 
+	pzyp.py -c [-l] [<number_val>] <file_name> 
+	pzyp.py -s <file_name>
+	pzyp.py -h
+
+options:
+	<number_val> A numeric value. [default: 2]	
+'''
+
 from encodings import utf_8
 import os
+import struct
 import subprocess
 import io
 import math
+import time
+from unicodedata import numeric
 import bitstruct
 import pathlib
 from typing import Union, BinaryIO, Tuple, Iterable
 from bitarray import bitarray
 from collections import deque
 from docopt import docopt
+from cryptography.fernet import Fernet
+
 
 print('Aplicacao: ' + __aplicacao__)
 print('Criadores: ' + ', '.join(__criadores__))
@@ -34,18 +51,9 @@ print('Data: ' + __data__)
 print('Estado: ' + __status__)
 print('Descricao: ' + __descricao__)
 
-usage = '''
 
-usage:
-	pzyp.py -d  <file_name>
-	pzyp.py -c -z <file_name>      
-	pzyp.py -c -m <file_name> 
-	pzyp.py -c -l <file_name>   
-	pzyp.py -c -xl <file_name> 
-'''
 
 UNENCODED_STRING_SIZE = 8  # in bits
-# ENCODED_OFFSET_SIZE = 24
 ENCODED_OFFSET_SIZE = 12  # in bits
 ENCODED_LEN_SIZE = 4  # in bits
 ENCODED_STRING_SIZE = ENCODED_OFFSET_SIZE + ENCODED_LEN_SIZE  # in bits
@@ -54,7 +62,6 @@ WINDOW_SIZE = 2 ** ENCODED_OFFSET_SIZE  # in bytes
 BREAK_EVEN_POINT = ENCODED_STRING_SIZE // 8  # in bytes
 MIN_STRING_SIZE = BREAK_EVEN_POINT + 1  # in bytes
 MAX_STRING_SIZE = 2 ** ENCODED_LEN_SIZE - 1 + MIN_STRING_SIZE  # in bytes
-
 
 class PZYPContext:
 
@@ -275,31 +282,32 @@ def textChar_elements(textChar_verify2, buffer2):
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
 		args = docopt(usage)
-		if args['-z']:
-			window = 1024
-			ENCODED_OFFSET_SIZE = 10  # in bits
-		elif args['-m']:
-			window = 4096
-			ENCODED_OFFSET_SIZE = 12  # in bits
-		elif args['-l']:
-			window = 16384
-			ENCODED_OFFSET_SIZE = 14  # in bits
-		elif args['-xl']:
-			window = 32768
-			ENCODED_OFFSET_SIZE = 15  # in bits
+		window = 4096
+		ENCODED_OFFSET_SIZE = 12
+		if args['-l']:
+			if args['<number_val>'] == None:
+				window = 4096
+				ENCODED_OFFSET_SIZE = 12  # in bits	
+			else:
+				if int(args['<number_val>']) == 1:
+					window = 1024
+				elif int(args['<number_val>']) == 2:
+					window = 4096
+				elif int(args['<number_val>']) == 3:
+					window = 16384
+				elif int(args['<number_val>']) == 4:
+					window = 32768
 
-		buffer = deque(maxlen=window)
+		buffer = deque(maxlen = window)
 		textChar_verify = []
-		output = []
 		flagEnd = 0
-		flag_done = 0
 		i = 0
 		flag_go = 0
 		text = in_.read()
 		for char in text:
 			index = textChar_elements(textChar_verify, buffer)
 			if textChar_elements(textChar_verify + [char], buffer) == -1 or i == len(text) - 1 or flag_go == 1:
-
+				
 				if i == len(text) - 1 and textChar_elements(textChar_verify + [char], buffer) != -1:
 					flagEnd = 1
 					textChar_verify.append(char)
@@ -318,10 +326,8 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 						if i == len(text) - 1:
 							lzss_out.write(bytes((char,)))
 					else:
-						# print(textChar_verify)
 						prefix_pos = distance
 						prefix_len = length
-						# print("pos",prefix_pos, "len",prefix_len)
 						lzss_out.write((prefix_pos, prefix_len))
 						flag_go = 0
 
@@ -343,14 +349,15 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 			if char != "<":
 				if len(textChar_verify) < ENCODED_OFFSET_SIZE:
 					textChar_verify.append(char)
-
+				
 				else:
 					flag_go = 1
-					textChar_verify.append(char)
+					textChar_verify.append(char) 
+
 
 			if len(buffer) > window:
 				buffer.popleft()
-
+			
 			i += 1
 
 		return 0
@@ -360,9 +367,8 @@ def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 	with (lzss_reader or LZSSReader(in_, ctx)) as lzss_in:
 		output = []
 		var_bytes = b''
-
+		
 		for encoded_flag, elemento in lzss_in:
-
 			if encoded_flag:
 				prefix_pos, prefix_len = elemento
 				actualText = output[-prefix_pos:][:prefix_len]
@@ -378,42 +384,62 @@ def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 
 
 def _main():
-	ctx = PZYPContext(
-		encoded_offset_size=4,  # janela terá 16 bytes
-		encoded_len_size=3  # comprimentos de 8 + 1 - 1 = 8 bytes
-	)
+	
 
 	args = docopt(usage)
 	var_bytes = b''
 	if args['-d']:
-		ficheiro = input('Insira nome do ficheiro:')
 		with open(args['<file_name>'], 'rb') as in_:
+			cod_aberto = in_.readline(259)
+			cod_desenpacotado = struct.unpack('II251s', cod_aberto)
+			ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "")
+			ficheiro = ''.join(x for x in ficheiro if x.isprintable())
 			with open(ficheiro, 'wb') as out_1:
-				var_bytes += decode(in_, out_1)
+				var_bytes += decode(in_,out_1)
 				out_1.write(var_bytes)
-			print('O ficheiro de saída tem os seguintes dados: ')
-			with open(ficheiro, 'rb') as out_2:
-				dados_comp = out_2.read()
-				print(dados_comp)
-				try:
-					subprocess.call([os.system(ficheiro)])
-				finally:
-					return
-
-	elif args['-c']:
-		ficheiro = input('Insira nome do ficheiro:')
-		with open(args['<file_name>'], 'rb') as _in:
-			with open(ficheiro + '.lzs', 'wb') as out:
-				encode(_in, out)
-			# out.seek(0)
-			# var_test = out.read()
-			# print(var_test)
-			print('O ficheiro de entrada tem os seguintes dados: ')
-			with open(ficheiro + '.lzs', 'rb') as out:
-				out.seek(0)
-				dados_comp = out.read()
-			print(dados_comp)
 			print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
+			print("Nome do ficheiro =", ficheiro)
+				
+	elif args['-c']:
+		if args['-l']:
+			if args['<number_val>'] == None:
+				ENCODED_OFFSET_SIZE = 12  # in bits	
+			else:
+				if int(args['<number_val>']) == 1:
+					ENCODED_OFFSET_SIZE = 11  # in bits
+					ENCODED_LEN_SIZE = 4
+				elif int(args['<number_val>']) == 2:
+					ENCODED_OFFSET_SIZE = 12  # in bits
+					ENCODED_LEN_SIZE = 4
+				elif int(args['<number_val>']) == 3:
+					ENCODED_OFFSET_SIZE = 14  # in bits
+					ENCODED_LEN_SIZE = 5
+				elif int(args['<number_val>']) == 4:
+					ENCODED_OFFSET_SIZE = 15  # in bits
+					ENCODED_LEN_SIZE = 5
+		
+		
+		time_ = int(time.time())
+		#timeCod_ = time_.to_bytes(4, byteorder='big')
+		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str(args['<file_name>']).encode())
+		#print(str(args['<file_name>']))
+		with open(args['<file_name>'], 'rb') as _in:
+			with open(args['<file_name>']+'.lzs', 'wb') as out:
+				out.write(cod_)
+				encode(_in, out)
+
+		
+		print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
+
+	elif args['-s']:
+		with open(args['<file_name>'], 'rb') as in_:
+			cod_aberto = in_.readline(259)
+			cod_desenpacotado = struct.unpack('II251s', cod_aberto)
+			print(" === Summary === ")
+			print("Name of compressed file : ", str(cod_desenpacotado[-1].decode()).replace(" ", ""))
+			print("Compression date/time : N/A")
+			print("Compression parameters : Buffer -> (", cod_desenpacotado[1], " bits), Max Seq. Len. -> (",cod_desenpacotado[0],  " bits)")
+
 	else:
 		print("command not found")
 
