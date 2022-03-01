@@ -17,10 +17,12 @@ __descricao__ = 'LZSS Encoder/ Decoder'
 usage = '''
 
 usage:
+	pzyp.py -c <file_name>
 	pzyp.py -d <file_name> 
 	pzyp.py -c [-l] [<number_val>] <file_name> 
 	pzyp.py -s <file_name>
 	pzyp.py -h
+	
 
 options:
 	<number_val> A numeric value. [default: 2]	
@@ -42,7 +44,6 @@ from collections import deque
 from docopt import docopt
 from cryptography.fernet import Fernet
 
-
 print('Aplicacao: ' + __aplicacao__)
 print('Criadores: ' + ', '.join(__criadores__))
 print('Pagina Github do Projecto: ' + __github__)
@@ -50,8 +51,6 @@ print('Curso: ' + ', '.join(__curso__))
 print('Data: ' + __data__)
 print('Estado: ' + __status__)
 print('Descricao: ' + __descricao__)
-
-
 
 UNENCODED_STRING_SIZE = 8  # in bits
 ENCODED_OFFSET_SIZE = 12  # in bits
@@ -62,6 +61,7 @@ WINDOW_SIZE = 2 ** ENCODED_OFFSET_SIZE  # in bytes
 BREAK_EVEN_POINT = ENCODED_STRING_SIZE // 8  # in bytes
 MIN_STRING_SIZE = BREAK_EVEN_POINT + 1  # in bytes
 MAX_STRING_SIZE = 2 ** ENCODED_LEN_SIZE - 1 + MIN_STRING_SIZE  # in bytes
+
 
 class PZYPContext:
 
@@ -298,7 +298,7 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 				elif int(args['<number_val>']) == 4:
 					window = 32768
 
-		buffer = deque(maxlen = window)
+		buffer = deque(maxlen=window)
 		textChar_verify = []
 		flagEnd = 0
 		i = 0
@@ -307,7 +307,7 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 		for char in text:
 			index = textChar_elements(textChar_verify, buffer)
 			if textChar_elements(textChar_verify + [char], buffer) == -1 or i == len(text) - 1 or flag_go == 1:
-				
+
 				if i == len(text) - 1 and textChar_elements(textChar_verify + [char], buffer) != -1:
 					flagEnd = 1
 					textChar_verify.append(char)
@@ -349,15 +349,14 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 			if char != "<":
 				if len(textChar_verify) < ENCODED_OFFSET_SIZE:
 					textChar_verify.append(char)
-				
+
 				else:
 					flag_go = 1
-					textChar_verify.append(char) 
-
+					textChar_verify.append(char)
 
 			if len(buffer) > window:
 				buffer.popleft()
-			
+
 			i += 1
 
 		return 0
@@ -367,7 +366,7 @@ def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 	with (lzss_reader or LZSSReader(in_, ctx)) as lzss_in:
 		output = []
 		var_bytes = b''
-		
+
 		for encoded_flag, elemento in lzss_in:
 			if encoded_flag:
 				prefix_pos, prefix_len = elemento
@@ -384,8 +383,6 @@ def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 
 
 def _main():
-	
-
 	args = docopt(usage)
 	var_bytes = b''
 	if args['-d']:
@@ -395,15 +392,18 @@ def _main():
 			ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "")
 			ficheiro = ''.join(x for x in ficheiro if x.isprintable())
 			with open(ficheiro, 'wb') as out_1:
-				var_bytes += decode(in_,out_1)
+				var_bytes += decode(in_, out_1)
 				out_1.write(var_bytes)
 			print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
 			print("Nome do ficheiro =", ficheiro)
-				
+
 	elif args['-c']:
+		ENCODED_OFFSET_SIZE = 12  # in bits
+		ENCODED_LEN_SIZE = 4
 		if args['-l']:
 			if args['<number_val>'] == None:
-				ENCODED_OFFSET_SIZE = 12  # in bits	
+				ENCODED_OFFSET_SIZE = 12  # in bits
+				ENCODED_LEN_SIZE = 4  # in bits
 			else:
 				if int(args['<number_val>']) == 1:
 					ENCODED_OFFSET_SIZE = 11  # in bits
@@ -417,18 +417,16 @@ def _main():
 				elif int(args['<number_val>']) == 4:
 					ENCODED_OFFSET_SIZE = 15  # in bits
 					ENCODED_LEN_SIZE = 5
-		
-		
+
 		time_ = int(time.time())
-		#timeCod_ = time_.to_bytes(4, byteorder='big')
+		# timeCod_ = time_.to_bytes(4, byteorder='big')
 		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str(args['<file_name>']).encode())
-		#print(str(args['<file_name>']))
+		# print(str(args['<file_name>']))
 		with open(args['<file_name>'], 'rb') as _in:
-			with open(args['<file_name>']+'.lzs', 'wb') as out:
+			with open(args['<file_name>'] + '.lzs', 'wb') as out:
 				out.write(cod_)
 				encode(_in, out)
 
-		
 		print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
 
 	elif args['-s']:
@@ -438,7 +436,8 @@ def _main():
 			print(" === Summary === ")
 			print("Name of compressed file : ", str(cod_desenpacotado[-1].decode()).replace(" ", ""))
 			print("Compression date/time : N/A")
-			print("Compression parameters : Buffer -> (", cod_desenpacotado[1], " bits), Max Seq. Len. -> (",cod_desenpacotado[0],  " bits)")
+			print("Compression parameters : Buffer -> (", cod_desenpacotado[1], " bits), Max Seq. Len. -> (",
+				  cod_desenpacotado[0], " bits)")
 
 	else:
 		print("command not found")
