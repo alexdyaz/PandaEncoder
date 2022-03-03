@@ -433,22 +433,21 @@ def _decode():
 											  "All Files (*)")
 	if check:
 		files = open(file, 'rb')
-		files.read()
+		with open(file, 'rb') as in_:
+			cod_aberto = in_.readline(259)
+			cod_desenpacotado = struct.unpack('II251s', cod_aberto)
+			ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "").replace("[", "").replace("]", "").replace("'", "")
+			ficheiro = ''.join(x for x in ficheiro if x.isprintable())
+			with open(ficheiro, 'wb') as out_1:
+				var_bytes += decode(in_, out_1)
+				out_1.write(var_bytes)
+				res = bytes(ficheiro, 'utf-8')
 
-		cod_aberto = files.readline()
-		cod_desenpacotado = struct.unpack('II251s', cod_aberto)
-		ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "")
-		ficheiro = ''.join(x for x in ficheiro if x.isprintable())
-		with ficheiro as out_1:
-			var_bytes += decode(files, out_1)
-			out_1.write(var_bytes)
-			res = bytes(ficheiro, 'utf-8')
-
-	file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
-											   "All Files (*)")
-	if check:
-		with open(file2, 'wb') as out:
-			out.write(res)
+	#file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
+	#										   "All Files (*)")
+	#if check:
+	#	with open(file2, 'wb') as out:
+	#		out.write(res)
 	sys.exit(0)
 
 
