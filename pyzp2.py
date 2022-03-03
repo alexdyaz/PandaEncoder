@@ -18,8 +18,10 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QSlider
+
+
 import struct
-from PandaEncoder.main import Ui_MainWindow
+#from PandaEncoder.main import Ui_MainWindow
 from panda import *
 
 usage = '''
@@ -70,7 +72,6 @@ BREAK_EVEN_POINT = ENCODED_STRING_SIZE // 8  # in bytes
 MIN_STRING_SIZE = BREAK_EVEN_POINT + 1  # in bytes
 MAX_STRING_SIZE = 2 ** ENCODED_LEN_SIZE - 1 + MIN_STRING_SIZE  # in bytes
 
-
 class Panda(Ui_MainWindow):
 
 	def __init__(self, window, vSl=4096, parent=None):  # BUTOES
@@ -88,8 +89,8 @@ class Panda(Ui_MainWindow):
 		self.sairbutton.clicked.connect(self.sair)
 		self.max_sliding_window_size.valueChanged[int].connect(self.valuechange)
 
-	def clevel(self):  # SLIDER WINDOW SELECAO NIVEL COMPRESSAO
 
+	def clevel(self):  # SLIDER WINDOW SELECAO NIVEL COMPRESSAO
 		print(self.valuechange())
 
 	def pw(self):
@@ -324,9 +325,23 @@ def textChar_elements(textChar_verify2, buffer2):
 
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
-
+		#args = docopt(usage)
 		window = 4096
 		ENCODED_OFFSET_SIZE = 12
+		#if args['-l']:
+		#	if args['<number_val>'] == None:
+		#		window = 4096
+		#		ENCODED_OFFSET_SIZE = 12  # in bits	
+		#	else:
+		#		if int(args['<number_val>']) == 1:
+		#			window = 1024
+		#		elif int(args['<number_val>']) == 2:
+		#			window = 4096
+		#		elif int(args['<number_val>']) == 3:
+		#			window = 16384
+		#		elif int(args['<number_val>']) == 4:
+		#			window = 32768
+
 		buffer = deque(maxlen=window)
 		textChar_verify = []
 		flagEnd = 0
@@ -391,6 +406,7 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 		return 0
 
 
+
 def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 	with (lzss_reader or LZSSReader(in_, ctx)) as lzss_in:
 		output = []
@@ -414,12 +430,12 @@ def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 def _decode():
 	var_bytes = b''
 	file, check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()", "",
-											  "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
+											  "All Files (*)")
 	if check:
 		files = open(file, 'rb')
 		files.read()
 
-		cod_aberto = files.readline(259)
+		cod_aberto = files.readline()
 		cod_desenpacotado = struct.unpack('II251s', cod_aberto)
 		ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "")
 		ficheiro = ''.join(x for x in ficheiro if x.isprintable())
@@ -429,33 +445,32 @@ def _decode():
 			res = bytes(ficheiro, 'utf-8')
 
 	file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
-											   "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
+											   "All Files (*)")
 	if check:
-		out = open(file2, 'wb')
-		out.write(res)
+		with open(file2, 'wb') as out:
+			out.write(res)
+	sys.exit(0)
 
 
 def _encode():
 	ENCODED_OFFSET_SIZE = 12  # in bits
 	ENCODED_LEN_SIZE = 4
 	file, check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()", "",
-											  "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
+											  "All Files (*)")
 
 	if check:
-		reads = open(file, 'r')
-		string = reads.read()
+		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str([file]).encode())
 
-		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str([string]).encode())
+		file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
+												"All Files (*)")
 
-	file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
-											   "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
-
-	if check:
-		with open(file, 'rb') as _in:
-			with open(file2, 'wb') as out:
-				out.write(cod_)
-				encode(_in, out)
-			print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
+		if check:
+			with open(file, 'rb') as _in:
+				with open(file2, 'wb') as out:
+					out.write(cod_)
+					encode(_in, out)
+				print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
+	sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -464,3 +479,4 @@ if __name__ == '__main__':
 	ui = Panda(MainWindow)
 	MainWindow.show()
 	app.exec_()
+	sys.exit(0)
