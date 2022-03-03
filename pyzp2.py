@@ -61,6 +61,7 @@ print('Data: ' + __data__)
 print('Estado: ' + __status__)
 print('Descricao: ' + __descricao__)
 
+window = 4096
 UNENCODED_STRING_SIZE = 8  # in bits
 ENCODED_OFFSET_SIZE = 12  # in bits
 ENCODED_LEN_SIZE = 4  # in bits
@@ -95,26 +96,38 @@ class Panda(Ui_MainWindow):
 		sys.exit(0)
 
 	def button1(self):
+		global window
 		window = 1024
+		global ENCODED_OFFSET_SIZE
 		ENCODED_OFFSET_SIZE = 12
+		global ENCODED_LEN_SIZE
 		ENCODED_LEN_SIZE = 4
 		print('level 1')
 
 	def button2(self):
+		global window
 		window = 4096
+		global ENCODED_OFFSET_SIZE
 		ENCODED_OFFSET_SIZE = 12
+		global ENCODED_LEN_SIZE
 		ENCODED_LEN_SIZE = 4
 		print('level 2')
 
 	def button3(self):
+		global window
 		window = 16384
+		global ENCODED_OFFSET_SIZE
 		ENCODED_OFFSET_SIZE = 14
+		global ENCODED_LEN_SIZE
 		ENCODED_LEN_SIZE = 5
 		print('level 3')
 
 	def button4(self):
+		global window
 		window = 32768
+		global ENCODED_LEN_SIZE
 		ENCODED_LEN_SIZE = 5
+		global ENCODED_OFFSET_SIZE
 		ENCODED_OFFSET_SIZE = 15
 		print('level 4')
 
@@ -337,22 +350,6 @@ def textChar_elements(textChar_verify2, buffer2):
 
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
-		# args = docopt(usage)
-		# window = 4096
-		# ENCODED_OFFSET_SIZE = 12
-		# if args['-l']:
-		#	if args['<number_val>'] == None:
-		#		window = 4096
-		#		ENCODED_OFFSET_SIZE = 12  # in bits	
-		#	else:
-		#		if int(args['<number_val>']) == 1:
-		#			window = 1024
-		#		elif int(args['<number_val>']) == 2:
-		#			window = 4096
-		#		elif int(args['<number_val>']) == 3:
-		#			window = 16384
-		#		elif int(args['<number_val>']) == 4:
-		#			window = 32768
 
 		buffer = deque(maxlen=window)
 		textChar_verify = []
