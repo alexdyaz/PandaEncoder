@@ -419,21 +419,20 @@ def _decode():
 		files = open(file, 'rb')
 		files.read()
 
-	file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
-											   "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
-	if check:
-		file2 = open(file2, 'wb')
-
-	with open(file, 'rb') as in_:
-		cod_aberto = in_.readline(259)
+		cod_aberto = files.readline(259)
 		cod_desenpacotado = struct.unpack('II251s', cod_aberto)
 		ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "")
 		ficheiro = ''.join(x for x in ficheiro if x.isprintable())
-		with open(ficheiro, 'wb') as out_1:
-			var_bytes += decode(in_, out_1)
+		with ficheiro as out_1:
+			var_bytes += decode(files, out_1)
 			out_1.write(var_bytes)
-			file2.write(ficheiro)
+			res = bytes(ficheiro, 'utf-8')
 
+	file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
+											   "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
+	if check:
+		out = open(file2, 'wb')
+		out.write(res)
 
 
 def _encode():
@@ -444,7 +443,7 @@ def _encode():
 
 	if check:
 		reads = open(file, 'r')
-		string = reads.read().replace('\n', '')
+		string = reads.read()
 
 		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str([string]).encode())
 
@@ -452,16 +451,11 @@ def _encode():
 											   "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
 
 	if check:
-		out1 = open(file2, 'wb')
-
-		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str(args['<file_name>']).encode())
-		# print(str(args['<file_name>']))
 		with open(file, 'rb') as _in:
-			with open(file2 + '.lzs', 'wb') as out:
+			with open(file2, 'wb') as out:
 				out.write(cod_)
 				encode(_in, out)
-				out1.write(cod_)
-		print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
+			print('\nAplicacao: ' + __aplicacao__, 'Terminado com exito')
 
 
 if __name__ == '__main__':
