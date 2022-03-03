@@ -1,5 +1,5 @@
-
-
+import sys
+from resources import icon_rc
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -9,7 +9,9 @@ class Ui_MainWindow(object):
 		MainWindow.resize(770, 380)
 		MainWindow.setMinimumSize(QtCore.QSize(770, 380))
 		MainWindow.setMaximumSize(QtCore.QSize(770, 380))
-		MainWindow.setStyleSheet("background-repeat: no-repeat;\n""background-image: url(:/icon/fundo.png);\n""background-position: center;")
+		MainWindow.setStyleSheet("background-repeat: no-repeat;\n"
+								 "background-image: url(:/icon/fundo.png);\n"
+								 "background-position: center;")
 		MainWindow.setIconSize(QtCore.QSize(64, 64))
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
 		self.centralwidget.setObjectName("centralwidget")
@@ -37,7 +39,10 @@ class Ui_MainWindow(object):
 		font.setFamily("Segoe UI Historic")
 		font.setPointSize(16)
 		self.encodelabel.setFont(font)
-		self.encodelabel.setStyleSheet("color: rgb(255, 255, 255);\n""background-color: #ffffff;\n""opacity: 3;\n""")
+		self.encodelabel.setStyleSheet("color: rgb(255, 255, 255);\n"
+									   "background-color: #ffffff;\n"
+									   "opacity: 3;\n"
+									   "")
 		self.encodelabel.setLineWidth(0)
 		self.encodelabel.setObjectName("encodelabel")
 		self.decodelabel = QtWidgets.QLabel(self.centralwidget)
@@ -49,12 +54,6 @@ class Ui_MainWindow(object):
 		self.decodelabel.setAutoFillBackground(False)
 		self.decodelabel.setStyleSheet("color: rgb(255, 255, 255);")
 		self.decodelabel.setObjectName("decodelabel")
-		self.max_sliding_window_size = QtWidgets.QSlider(self.centralwidget)
-		self.max_sliding_window_size.setGeometry(QtCore.QRect(40, 260, 251, 22))
-		self.max_sliding_window_size.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-		self.max_sliding_window_size.setStyleSheet("selection-background-color: rgb(85, 255, 255);")
-		self.max_sliding_window_size.setOrientation(QtCore.Qt.Horizontal)
-		self.max_sliding_window_size.setObjectName("max_sliding_window_size")
 		self.compressLabel = QtWidgets.QLabel(self.centralwidget)
 		self.compressLabel.setGeometry(QtCore.QRect(130, 240, 161, 21))
 		font = QtGui.QFont()
@@ -63,10 +62,6 @@ class Ui_MainWindow(object):
 		self.compressLabel.setFont(font)
 		self.compressLabel.setStyleSheet("alternate-background-color: rgb(255, 255, 255);")
 		self.compressLabel.setObjectName("compressLabel")
-		self.pushButtonOKcl = QtWidgets.QPushButton(self.centralwidget)
-		self.pushButtonOKcl.setGeometry(QtCore.QRect(300, 250, 51, 23))
-		self.pushButtonOKcl.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-		self.pushButtonOKcl.setObjectName("clevelbutton")
 		self.pwInputstring = QtWidgets.QTextEdit(self.centralwidget)
 		self.pwInputstring.setGeometry(QtCore.QRect(40, 200, 251, 31))
 		font = QtGui.QFont()
@@ -91,7 +86,19 @@ class Ui_MainWindow(object):
 		self.pushButtonOKpw = QtWidgets.QPushButton(self.centralwidget)
 		self.pushButtonOKpw.setGeometry(QtCore.QRect(300, 200, 51, 23))
 		self.pushButtonOKpw.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-		self.pushButtonOKpw.setObjectName("pwbutton")
+		self.pushButtonOKpw.setObjectName("pushButtonOKpw")
+		self.pushButton1 = QtWidgets.QPushButton(self.centralwidget)
+		self.pushButton1.setGeometry(QtCore.QRect(140, 270, 31, 23))
+		self.pushButton1.setObjectName("pushButton1")
+		self.pushButton2 = QtWidgets.QPushButton(self.centralwidget)
+		self.pushButton2.setGeometry(QtCore.QRect(180, 270, 31, 23))
+		self.pushButton2.setObjectName("pushButton2")
+		self.pushButton3 = QtWidgets.QPushButton(self.centralwidget)
+		self.pushButton3.setGeometry(QtCore.QRect(220, 270, 31, 23))
+		self.pushButton3.setObjectName("pushButton3")
+		self.pushButton4 = QtWidgets.QPushButton(self.centralwidget)
+		self.pushButton4.setGeometry(QtCore.QRect(260, 270, 31, 23))
+		self.pushButton4.setObjectName("pushButton4")
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.actionEncode = QtWidgets.QAction(MainWindow)
 		self.actionEncode.setObjectName("actionEncode")
@@ -109,21 +116,21 @@ class Ui_MainWindow(object):
 		self.encodelabel.setText(_translate("MainWindow", "Encode"))
 		self.decodelabel.setText(_translate("MainWindow", "Decode"))
 		self.compressLabel.setText(_translate("MainWindow", "Compression Level"))
-		self.pushButtonOKcl.setText(_translate("MainWindow", "OK"))
 		self.PasswordLabel.setText(_translate("MainWindow", "Password"))
 		self.pushButtonOKpw.setText(_translate("MainWindow", "OK"))
+		self.pushButton1.setText(_translate("MainWindow", "1"))
+		self.pushButton2.setText(_translate("MainWindow", "2"))
+		self.pushButton3.setText(_translate("MainWindow", "3"))
+		self.pushButton4.setText(_translate("MainWindow", "4"))
 		self.actionEncode.setText(_translate("MainWindow", "Encode"))
 		self.actionDecode.setText(_translate("MainWindow", "Decode"))
 		self.actionSair.setText(_translate("MainWindow", "Exit"))
 
 
 if __name__ == "__main__":
-	import sys
-	from resources import icon_rc
-
-	app = QtWidgets.QApplication(sys.argv)
-	MainWindow = QtWidgets.QMainWindow()
-	ui = Ui_MainWindow()
-	ui.setupUi(MainWindow)
-	MainWindow.show()
-	sys.exit(app.exec_())
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

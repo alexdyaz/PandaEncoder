@@ -13,16 +13,15 @@ __descricao__ = 'LZSS Encoder/ Decoder'
 # =============================================================================
 #
 # =============================================================================
-import sys
+
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QSlider
-
-
+import sys
 import struct
-#from PandaEncoder.main import Ui_MainWindow
-from panda import *
+# from PandaEncoder.main import Ui_MainWindow
+from main import *
 
 usage = '''
 
@@ -72,26 +71,19 @@ BREAK_EVEN_POINT = ENCODED_STRING_SIZE // 8  # in bytes
 MIN_STRING_SIZE = BREAK_EVEN_POINT + 1  # in bytes
 MAX_STRING_SIZE = 2 ** ENCODED_LEN_SIZE - 1 + MIN_STRING_SIZE  # in bytes
 
+
 class Panda(Ui_MainWindow):
 
 	def __init__(self, window, vSl=4096, parent=None):  # BUTOES
 		self.setupUi(window).__init__(parent)
-		self.max_sliding_window_size = QSlider(Qt.Horizontal)
-		self.max_sliding_window_size.setMinimum(1024)
-		self.max_sliding_window_size.setMaximum(32768)
-		self.max_sliding_window_size.setValue(vSl)
-		self.max_sliding_window_size.setTickPosition(QSlider.TicksBelow)
-		self.max_sliding_window_size.setTickInterval(10)
-		self.pushButtonOKcl.clicked.connect(self.clevel)
 		self.pushButtonOKpw.clicked.connect(self.pw)
 		self.encodebutton.clicked.connect(_encode)
 		self.decodebutton.clicked.connect(_decode)
 		self.sairbutton.clicked.connect(self.sair)
-		self.max_sliding_window_size.valueChanged[int].connect(self.valuechange)
-
-
-	def clevel(self):  # SLIDER WINDOW SELECAO NIVEL COMPRESSAO
-		print(self.valuechange())
+		self.pushButton1.clicked.connect(self.button1)
+		self.pushButton2.clicked.connect(self.button2)
+		self.pushButton3.clicked.connect(self.button3)
+		self.pushButton4.clicked.connect(self.button4)
 
 	def pw(self):
 		pw = self.pwInputstring.toPlainText()
@@ -99,12 +91,32 @@ class Panda(Ui_MainWindow):
 
 		return
 
-	def valuechange(self):  # OBTER VALOR ALTERADO DO SLIDER WINDOW
-		self.max_sliding_window_size.size = self.max_sliding_window_size.value()
-		return self.max_sliding_window_size.size
-
 	def sair(self):
-		quit()
+		sys.exit(0)
+
+	def button1(self):
+		window = 1024
+		ENCODED_OFFSET_SIZE = 12
+		ENCODED_LEN_SIZE = 4
+		print('level 1')
+
+	def button2(self):
+		window = 4096
+		ENCODED_OFFSET_SIZE = 12
+		ENCODED_LEN_SIZE = 4
+		print('level 2')
+
+	def button3(self):
+		window = 16384
+		ENCODED_OFFSET_SIZE = 14
+		ENCODED_LEN_SIZE = 5
+		print('level 3')
+
+	def button4(self):
+		window = 32768
+		ENCODED_LEN_SIZE = 5
+		ENCODED_OFFSET_SIZE = 15
+		print('level 4')
 
 
 class PZYPContext:
@@ -325,10 +337,10 @@ def textChar_elements(textChar_verify2, buffer2):
 
 def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 	with (lzss_writer or LZSSWriter(out, ctx)) as lzss_out:
-		#args = docopt(usage)
-		window = 4096
-		ENCODED_OFFSET_SIZE = 12
-		#if args['-l']:
+		# args = docopt(usage)
+		# window = 4096
+		# ENCODED_OFFSET_SIZE = 12
+		# if args['-l']:
 		#	if args['<number_val>'] == None:
 		#		window = 4096
 		#		ENCODED_OFFSET_SIZE = 12  # in bits	
@@ -406,7 +418,6 @@ def encode(in_: BinaryIO, out: BinaryIO, lzss_writer=None, ctx=PZYPContext()):
 		return 0
 
 
-
 def decode(in_: BinaryIO, out: BinaryIO, lzss_reader=None, ctx=PZYPContext()):
 	with (lzss_reader or LZSSReader(in_, ctx)) as lzss_in:
 		output = []
@@ -436,24 +447,23 @@ def _decode():
 		with open(file, 'rb') as in_:
 			cod_aberto = in_.readline(259)
 			cod_desenpacotado = struct.unpack('II251s', cod_aberto)
-			ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "").replace("[", "").replace("]", "").replace("'", "")
+			ficheiro = str(cod_desenpacotado[-1].decode()).replace(" ", "").replace("[", "").replace("]", "").replace(
+				"'", "")
 			ficheiro = ''.join(x for x in ficheiro if x.isprintable())
 			with open(ficheiro, 'wb') as out_1:
 				var_bytes += decode(in_, out_1)
 				out_1.write(var_bytes)
 				res = bytes(ficheiro, 'utf-8')
 
-	#file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
+	# file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
 	#										   "All Files (*)")
-	#if check:
+	# if check:
 	#	with open(file2, 'wb') as out:
 	#		out.write(res)
 	sys.exit(0)
 
 
 def _encode():
-	ENCODED_OFFSET_SIZE = 12  # in bits
-	ENCODED_LEN_SIZE = 4
 	file, check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()", "",
 											  "All Files (*)")
 
@@ -461,7 +471,7 @@ def _encode():
 		cod_ = struct.pack('II251s', ENCODED_OFFSET_SIZE, ENCODED_LEN_SIZE, str([file]).encode())
 
 		file2, check = QFileDialog.getSaveFileName(None, "QFileDialog.getSaveFileName()", "",
-												"All Files (*)")
+												   "All Files (*)")
 
 		if check:
 			with open(file, 'rb') as _in:
@@ -478,4 +488,3 @@ if __name__ == '__main__':
 	ui = Panda(MainWindow)
 	MainWindow.show()
 	app.exec_()
-	sys.exit(0)
